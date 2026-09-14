@@ -15,7 +15,18 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import os
+
 import streamlit as st
+
+# On Streamlit Community Cloud, configuration is provided via st.secrets.
+# Bridge those into environment variables so the shared config layer (which
+# reads os.environ / .env locally) works unchanged in the cloud.
+try:
+    for _k, _v in st.secrets.items():
+        os.environ.setdefault(str(_k), str(_v))
+except Exception:
+    pass
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
@@ -29,8 +40,17 @@ st.set_page_config(page_title="Enterprise Knowledge Assistant", page_icon="📚"
 
 @st.cache_resource(show_spinner=False)
 def load_pipeline() -> RAGPipeline:
-    """Build the pipeline once per session (cached across reruns)."""
-    return RAGPipeline()
+    """Build the pipeline once per session (cached across reruns).
+
+    If the index is empty but documents are present (e.g. a fresh cloud
+    deployment where ``storage/`` was not committed), build it automatically
+    so the app is usable on first load.
+    """
+    pipe = RAGPipeline()
+    if not pipe.is_ready() and DATA_DIR.exists() and any(DATA_DIR.iterdir()):
+        build_index(settings=pipe.settings, log=lambda _m: None)
+        pipe = RAGPipeline()
+    return pipe
 
 
 def reset_pipeline() -> None:
