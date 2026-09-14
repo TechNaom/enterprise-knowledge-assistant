@@ -1,0 +1,20 @@
+# Enterprise Knowledge Assistant — runtime dependencies
+# Python 3.11+ recommended.
+
+# Core RAG
+chromadb>=1.0            # local persistent vector database
+rank-bm25>=0.2.2         # BM25 sparse (keyword) retrieval
+numpy>=1.26              # vector math (MMR / cosine)
+
+# Document loading
+pypdf>=5.0               # PDF text extraction
+
+# LLM / embedding providers
+ollama>=0.4              # local, open-source backend (default)
+google-genai>=0.3        # hosted Gemini backend (for live deployment)
+
+# User interface
+streamlit>=1.40          # chat web UI
+
+# Sample-data generation (dev only; used by scripts/generate_sample_docs.py)
+fpdf2>=2.7

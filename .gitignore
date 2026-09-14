@@ -1,0 +1,19 @@
+# Secrets — never commit real credentials
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Vector store / index artifacts (rebuilt via `python ingest.py`)
+storage/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
