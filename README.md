@@ -156,6 +156,23 @@ python ask.py                        # interactive, remembers the conversation
 
 ---
 
+## ✅ Testing
+
+The suite runs **fully offline** against a deterministic `FakeProvider`
+(bag-of-words embeddings + prompt-aware canned responses in
+`tests/conftest.py`), so it needs no network, model server, or API key.
+
+```bash
+pip install -r requirements-dev.txt
+pytest                 # 31 tests: unit, regression (golden-set), performance
+pytest -m regression   # just the retrieval-quality guards
+```
+
+Coverage: chunking & retrieval math, BM25 + document loaders, conversation
+memory, golden-set retrieval regressions, and a latency check.
+
+---
+
 ## 🌐 Live Deployment (Streamlit Community Cloud)
 
 The app deploys as a public URL using the **Gemini** backend (a hosted host has

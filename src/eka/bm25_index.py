@@ -40,11 +40,16 @@ class BM25Index:
     def query(self, text: str, k: int) -> list[Retrieved]:
         if self._bm25 is None or not self._chunks:
             return []
+        query_tokens = set(_tokenize(text))
         scores = self._bm25.get_scores(_tokenize(text))
         ranked = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
         out: list[Retrieved] = []
         for i in ranked[:k]:
-            if scores[i] <= 0:
+            # Keep positively-scored chunks, but also keep any chunk that
+            # literally contains a query term even when BM25's IDF collapses to
+            # zero (a small-corpus edge case).  Dropping an exact keyword match
+            # would defeat the whole purpose of the sparse index.
+            if scores[i] <= 0 and not (query_tokens & set(_tokenize(self._chunks[i].text))):
                 continue
             c = self._chunks[i]
             out.append(

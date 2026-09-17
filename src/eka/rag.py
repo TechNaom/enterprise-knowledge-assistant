@@ -39,13 +39,21 @@ def _format_context(chunks: list[Retrieved]) -> str:
 class RAGPipeline:
     """Load-once, ask-many RAG engine."""
 
-    def __init__(self, settings: Settings | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        provider: Provider | None = None,
+        chroma_dir=None,
+        bm25_path=None,
+    ) -> None:
         self.settings = settings or get_settings()
-        self.provider: Provider = get_provider(self.settings)
+        self.provider: Provider = provider or get_provider(self.settings)
         from .config import BM25_PATH, CHROMA_DIR
 
-        self.store = VectorStore(CHROMA_DIR, self.settings.collection_name)
-        self.bm25 = BM25Index.load(BM25_PATH)
+        self.store = VectorStore(
+            chroma_dir or CHROMA_DIR, self.settings.collection_name
+        )
+        self.bm25 = BM25Index.load(bm25_path or BM25_PATH)
         self.retriever = HybridRetriever(
             self.settings, self.provider, self.store, self.bm25
         )

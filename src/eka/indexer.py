@@ -42,6 +42,9 @@ def _embed_in_batches(provider, texts: list[str], batch_size: int, log: Progress
 def build_index(
     settings: Settings | None = None,
     data_dir: Path | None = None,
+    provider=None,
+    chroma_dir: Path | None = None,
+    bm25_path: Path | None = None,
     log: ProgressFn = print,
     batch_size: int = 16,
 ) -> IngestReport:
@@ -49,6 +52,8 @@ def build_index(
     from .config import DATA_DIR
 
     data_dir = data_dir or DATA_DIR
+    chroma_dir = chroma_dir or CHROMA_DIR
+    bm25_path = bm25_path or BM25_PATH
 
     log(f"Loading documents from {data_dir} ...")
     docs = load_folder(data_dir)
@@ -62,20 +67,20 @@ def build_index(
     chunks = chunk_documents(docs, settings.chunk_size, settings.chunk_overlap)
     log(f"Split into {len(chunks)} chunks. Embedding with {settings.summary()} ...")
 
-    provider = get_provider(settings)
+    provider = provider or get_provider(settings)
     embeddings = _embed_in_batches(
         provider, [c.text for c in chunks], batch_size, log
     )
 
     log("Writing dense vectors to ChromaDB ...")
-    store = VectorStore(CHROMA_DIR, settings.collection_name)
+    store = VectorStore(chroma_dir, settings.collection_name)
     store.reset()
     store.add(chunks, embeddings)
 
     log("Building BM25 sparse index ...")
     bm25 = BM25Index()
     bm25.build(chunks)
-    bm25.save(BM25_PATH)
+    bm25.save(bm25_path)
 
     log(f"Done. {len(docs)} docs -> {len(chunks)} chunks indexed.")
     return IngestReport(len(docs), len(chunks), provider.name)
